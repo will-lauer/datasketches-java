@@ -32,7 +32,7 @@ under the License.
 
   <groupId>org.apache.datasketches</groupId>
   <artifactId>datasketches-java</artifactId>
-  <version>2.1.0-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>${project.artifactId}</name>
@@ -88,11 +88,11 @@ under the License.
     <!-- END:UNIQUE FOR THIS JAVA COMPONENT -->
 
     <!-- Test -->
-    <testng.version>7.1.0</testng.version>
+    <testng.version>7.4.0</testng.version>
 
     <!-- System-wide properties -->
     <maven.version>3.5.0</maven.version>
-    <java.version>1.8</java.version>
+    <java.version>16</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <argLine>-Xmx4g -Duser.language=en -Duser.country=US -Dfile.encoding=UTF-8</argLine>
@@ -118,16 +118,16 @@ under the License.
     <maven-remote-resources-plugin.version>[1.7.0,)</maven-remote-resources-plugin.version> <!-- overrides parent -->
     <maven-source-plugin.version>3.2.1</maven-source-plugin.version> <!-- overrides parent -->
     <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version> <!-- overrides parent -->
+    <maven-toolchains-plugin.version>3.0.0</maven-toolchains-plugin.version>
     <!-- Apache Plugins -->
     <apache-rat-plugin.version>0.13</apache-rat-plugin.version> <!-- overrides parent -->
     <!-- org.jacoco Maven Plugins -->
     <jacoco-maven-plugin.version>0.8.6</jacoco-maven-plugin.version>
     <!-- org.eluder Maven Plugins -->
-    <coveralls-repo-token></coveralls-repo-token>
     <coveralls-maven-plugin.version>4.3.0</coveralls-maven-plugin.version>
     <!-- other -->
     <lifecycle-mapping.version>1.0.0</lifecycle-mapping.version>
-    <git-commit-id-plugin.version>3.0.0</git-commit-id-plugin.version>
+    <git-commit-id-plugin.version>4.0.4</git-commit-id-plugin.version>
   </properties>
 
   <repositories>
@@ -338,9 +338,32 @@ under the License.
             <trimStackTrace>false</trimStackTrace>
             <useManifestOnlyJar>false</useManifestOnlyJar>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
+            <argLine>
+              --add-opens java.base/java.nio=ALL-UNNAMED
+              --add-opens java.base/java.lang=ALL-UNNAMED
+              --add-opens java.base/jdk.internal.misc=ALL-UNNAMED
+              --add-opens java.base/jdk.internal.ref=ALL-UNNAMED
+              --add-opens java.base/sun.nio.ch=ALL-UNNAMED
+            </argLine>
           </configuration>
         </plugin>
-
+        <!--
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-toolchains-plugin</artifactId>
+          <version>${maven-toolchains-plugin.version}</version>
+          <configuration>
+            <toolchains>
+              <jdk><version>8</version></jdk>
+            </toolchains>
+          </configuration>
+          <executions>
+            <execution>
+              <goals><goal>toolchain</goal></goals>
+            </execution>
+          </executions>
+        </plugin>
+        -->
         <plugin>
           <!-- Generates code coverage report from website. -->
           <groupId>org.jacoco</groupId>
@@ -367,9 +390,28 @@ under the License.
           <groupId>org.eluder.coveralls</groupId>
           <artifactId>coveralls-maven-plugin</artifactId>
           <version>${coveralls-maven-plugin.version}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
           <configuration>
-            <repoToken>${coveralls-repo-token}</repoToken>
+            <source>${maven.compiler.source}</source>
+            <target>${maven.compiler.target}</target>
+            <compilerArgs>
+              <arg>--add-exports</arg>
+              <arg>java.base/sun.nio.ch=ALL-UNNAMED</arg>
+              <arg>--add-exports</arg>
+              <arg>java.base/jdk.internal.ref=ALL-UNNAMED</arg>
+            </compilerArgs>
           </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>pl.project13.maven</groupId>
+          <artifactId>git.commit-id-plugin</artifactId>
+          <version>${git-commit-id-plugin.version}</version>
         </plugin>
 
       </plugins>
@@ -415,54 +457,14 @@ under the License.
         <groupId>org.eluder.coveralls</groupId>
         <artifactId>coveralls-maven-plugin</artifactId>
       </plugin>
+      <plugin>
+        <groupId>pl.project13.maven</groupId>
+        <artifactId>git-commit-id-plugin</artifactId>
+      </plugin>
     </plugins>
   </build>
   <profiles>
-    <!-- Ignore nuisance warning from Apache parent plugin: 
-          "maven-remote-resources-plugin (goal "process") is ignored by m2e".
-          This also should fix the Maven warning that it can't find the lifecycle-mapping jar.
-          This profile is only active when the property "m2e.version" is set, 
-          which is the case when building in Eclipse with m2e.
-          The ignore below tells m2eclipse to skip the execution.
-    -->
-    <profile>
-      <id>m2e</id>
-      <activation>
-        <property>
-          <name>m2e.version</name>
-        </property>
-      </activation>
-      <build>
-        <pluginManagement>
-          <plugins>
-            <plugin>
-              <groupId>org.eclipse.m2e</groupId>
-              <artifactId>lifecycle-mapping</artifactId>
-              <version>${lifecycle-mapping.version}</version>
-              <configuration>
-                <lifecycleMappingMetadata>
-                  <pluginExecutions>
-                    <pluginExecution>
-                      <pluginExecutionFilter>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-remote-resources-plugin</artifactId>
-                        <versionRange>${maven-remote-resources-plugin.version}</versionRange>
-                        <goals>
-                          <goal>process</goal>
-                        </goals>
-                      </pluginExecutionFilter>
-                      <action>
-                        <ignore/>
-                      </action>
-                    </pluginExecution>
-                  </pluginExecutions>
-                </lifecycleMappingMetadata>
-              </configuration>
-            </plugin>
-          </plugins>
-        </pluginManagement>
-      </build>
-    </profile>
+
 
     <profile>
       <id>strict</id>
@@ -578,10 +580,16 @@ under the License.
                     <Build-OS>${os.name} ${os.arch} ${os.version}</Build-OS>
                     <Implementation-Vendor>The Apache Software Foundation</Implementation-Vendor>
                     <GroupId-ArtifactId>${project.groupId}:${project.artifactId}</GroupId-ArtifactId>
+                    <!-- these properties are generated by the git-commit-id-plugin during initialize -->
+                    <!--suppress UnresolvedMavenProperty -->
                     <git-branch>${git.branch}</git-branch>
+                    <!--suppress UnresolvedMavenProperty -->
                     <git-commit-id>${git.commit.id.full}</git-commit-id>
+                    <!--suppress UnresolvedMavenProperty -->
                     <git-commit-time>${git.commit.time}</git-commit-time>
+                    <!--suppress UnresolvedMavenProperty -->
                     <git-commit-user-email>${git.commit.user.email}</git-commit-user-email>
+                    <!--suppress UnresolvedMavenProperty -->
                     <git-commit-tag>${git.tags}</git-commit-tag>
                   </manifestEntries>
                 </archive>
