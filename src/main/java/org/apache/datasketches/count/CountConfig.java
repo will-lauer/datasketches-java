@@ -3,6 +3,7 @@
  */
 package org.apache.datasketches.count;
 
+import java.util.Objects;
 import java.util.Random;
 
 /**
@@ -56,4 +57,22 @@ public class CountConfig {
     public int getNumHashes() {
         return numHashes;
     }    
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) { 
+            return true;
+        } else if (obj == null) {
+            return false;
+        } else if (!(obj instanceof CountConfig)) {
+            return false;
+        } else {
+            CountConfig that = (CountConfig) obj;
+            return this.numHashes == that.numHashes &&
+                    this.numBuckets == that.numBuckets &&
+                    this.prime == that.prime &&
+                    Objects.deepEquals(this.hashCoefA, that.hashCoefA) &&
+                    Objects.deepEquals(this.hashCoefB, that.hashCoefB);
+        }
+    }
 }
