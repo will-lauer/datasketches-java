@@ -35,7 +35,7 @@ public interface CountingSketch<T> {
     long getEstimate(T item);
     
     /**
-     * THe number of hashes
+     * The number of hashes
      * @return The number of hashes
      */
     int getNumHashes();

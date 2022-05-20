@@ -29,5 +29,22 @@ public class CountMinSketchTest {
             System.out.println(s.getEstimate(ii));
         }
     }
+    
+    @Test
+    public void validateBucketSuggestion() {
+        assertEquals(CountMinSketch.suggestNumBuckets(.2),14);
+        assertEquals(CountMinSketch.suggestNumBuckets(.1),28);
+        assertEquals(CountMinSketch.suggestNumBuckets(.01),272);
+    }
+    
+    @Test
+    public void validateHashSuggestion() {
+        // 1 stddev
+        assertEquals(CountMinSketch.suggestNumHashes(.682689492), 2);
+        // 2 stddev 
+        assertEquals(CountMinSketch.suggestNumHashes(.954499736), 4);
+        // 3 stddev
+        assertEquals(CountMinSketch.suggestNumHashes(.997300204), 6);
+    }
 
 }

@@ -25,9 +25,9 @@ public class CountConfig {
     public CountConfig(int numHashes, int numBuckets, long randomSeed) {
         Random rnd = new Random(randomSeed);
         
-        this.hashCoefA = rnd.longs(numHashes).toArray();
-        this.hashCoefB = rnd.longs(numHashes).toArray();
         this.prime =  (1 << MERSENNE_EXP) - 1;
+        this.hashCoefA = rnd.longs(numHashes, 1, prime).toArray();
+        this.hashCoefB = rnd.longs(numHashes, 1, prime).toArray();
         
         this.numBuckets = numBuckets;
         this.numHashes = numHashes;
