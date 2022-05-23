@@ -6,6 +6,7 @@ package org.apache.datasketches.count;
 import org.testng.annotations.Test;
 
 import java.util.Random;
+import java.util.stream.LongStream;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -17,7 +18,7 @@ public class CountMinSketchTest {
 
     @Test
     public void basicTest() {
-        CountingSketch<Long> s = new CountMinSketch<>(3, 20);
+        CountingSketch<Long, CountMinSketch<Long>> s = new CountMinSketch<>(3, 20);
         
         Random rnd = new Random(0);
         
@@ -28,6 +29,22 @@ public class CountMinSketchTest {
         for (long ii = 0; ii< 50; ++ii) {
             System.out.println(s.getEstimate(ii));
         }
+    }
+    
+    @Test
+    public void mergeTest() {
+        CountMinSketch<Long> s = new CountMinSketch<>(4, 6);
+        CountMinSketch<Long> t = new CountMinSketch<>(s.getConfig());
+        
+        LongStream.of(0,1,2,3,4,5).forEach(l->{s.update(l); t.update(l);});
+        
+        s.merge(t);
+        
+        assertEquals(s.getTotalWeight(), 2*t.getTotalWeight());
+        for (long ii=0; ii < 6; ++ii) {
+            assertEquals(s.getEstimate(ii), 2);
+        }
+
     }
     
     @Test

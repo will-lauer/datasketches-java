@@ -11,7 +11,7 @@ package org.apache.datasketches.count;
  * 
  * @param <T> The type of 
  */
-public class CountMinSketch<T extends Number> implements CountingSketch<T> {
+public class CountMinSketch<T extends Number> implements CountingSketch<T, CountMinSketch<T>> {
 
     private CountConfig config;
     private long[] table;
@@ -31,7 +31,7 @@ public class CountMinSketch<T extends Number> implements CountingSketch<T> {
     }
     
     /*
-     * @see CountingSketch#update(Object))
+     * @see CountingSketch#update(Object)
      */
     @Override
     public void update(T item) {
@@ -39,17 +39,38 @@ public class CountMinSketch<T extends Number> implements CountingSketch<T> {
     }
 
     /*
-     * @see CountingSketch#update(Object, long))
+     * @see CountingSketch#update(Object, long)
      */
     @Override
     public void update(T item, long weight) {
         for (int ii = 0; ii < config.getNumHashes(); ++ii) {
             int bucket = (int) (hashItem(item, ii) % config.getNumBuckets());
-            table[(config.getNumHashes() * ii) + bucket] += weight;
+            table[(config.getNumBuckets() * ii) + bucket] += weight;
         }
         totalWeight += weight;
     }
 
+
+    /*
+     * @see CountingSketch#merge(Object)
+     */
+    @Override
+    public void merge(CountMinSketch<T> sketch) {
+        if (this == sketch) {
+            throw new IllegalArgumentException("Cannot merge sketch with itself");
+        }
+        
+        // validate that the sketches are compatible.
+        if (!config.equals(sketch.config)) {
+            throw new IllegalArgumentException("Incompatible sketch config");
+        }
+        
+        for (int ii = 0; ii < table.length; ++ii) {
+            table[ii] += sketch.table[ii];
+        }
+        
+        totalWeight += sketch.totalWeight;
+    }
     
     /*
      * @see CountingSketch#getEstimate
@@ -60,7 +81,7 @@ public class CountMinSketch<T extends Number> implements CountingSketch<T> {
         
         for (int ii = 0; ii < config.getNumHashes(); ++ii) {
             int bucket = (int) (hashItem(item, ii) % config.getNumBuckets());
-            estimate = Math.min(estimate, table[(config.getNumHashes() * ii) + bucket]);
+            estimate = Math.min(estimate, table[(config.getNumBuckets() * ii) + bucket]);
         }
         
         return estimate;
@@ -80,6 +101,13 @@ public class CountMinSketch<T extends Number> implements CountingSketch<T> {
     @Override
     public int getNumBuckets() {
         return config.getNumBuckets();
+    }
+    
+    /**
+     * get the config
+     */
+    public CountConfig getConfig() {
+        return config;
     }
     
     /*
@@ -124,4 +152,5 @@ public class CountMinSketch<T extends Number> implements CountingSketch<T> {
     public static int suggestNumHashes(double probability) {
         return (int) Math.ceil(Math.log(1.0/(1.0-probability)));
     }
+
 }

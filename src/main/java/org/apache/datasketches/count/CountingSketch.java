@@ -9,7 +9,7 @@ package org.apache.datasketches.count;
  *
  * @param <T> The type of item to count. Must have a reasonable implementation of {@link Object#hashCode()}
  */
-public interface CountingSketch<T> {
+public interface CountingSketch<T, S extends CountingSketch<T,S> > {
     /**
      * Add the item to the sketch, with an implicit weight of 1
      * 
@@ -25,6 +25,14 @@ public interface CountingSketch<T> {
      * @param weight The weight associated with the item.
      */
     void update(T item, long weight);
+    
+
+    /**
+     * Merge another CountingSketch into this one.
+     * 
+     * @param sketch The sketch to merge
+     */
+    void merge(S sketch);
     
     /**
      * Get the estimated count (weight) for the specified item.
